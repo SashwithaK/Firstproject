@@ -7,9 +7,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      # <-- Use the tunnel URL provided by cloudflared running on your local machine
-      - OLLAMA_HOST=https://workshops-coat-tommy-jimmy.trycloudflare.com
+      - OLLAMA_HOST=http://172.16.16.38:11434  # <-- Local machine IP where Ollama runs
       - DATABASE_URL=sqlite+aiosqlite:///./data/handwriting.db
+      - OLLAMA_MODEL=llava:latest
+      - OLLAMA_TIMEOUT_SECONDS=120
+      - OLLAMA_TEMPERATURE=0.1
+      - OLLAMA_NUM_PREDICT=2048
+      - ENABLE_IMAGE_PREPROCESSING=true
     volumes:
       - backend_data:/app/data
       - ./backend/uploads:/app/uploads
@@ -20,8 +24,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      # <-- EC2 public IP for browser access
-      - BACKEND_URL=http://15.236.201.26:8000
+      - BACKEND_URL=http://52.47.180.240:8000   # <-- Replace with your EC2 public IP to access from browser
     depends_on:
       - backend
 
