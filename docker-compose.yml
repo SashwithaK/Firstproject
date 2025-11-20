@@ -4,19 +4,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_HOST=${OLLAMA_HOST}
       - DATABASE_URL=sqlite+aiosqlite:///./data/handwriting.db
-      # Add your Langfuse keys here if needed
-      # - LANGFUSE_PUBLIC_KEY=...
-      # - LANGFUSE_SECRET_KEY=...
     volumes:
       - backend_data:/app/data
       - ./backend/uploads:/app/uploads
-    depends_on:
-      ollama:
-        condition: service_healthy
-      ollama-init:
-        condition: service_completed_successfully
 
   frontend:
     build: ./frontend
@@ -27,36 +19,5 @@ services:
     depends_on:
       - backend
 
-  ollama:
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    # Uncomment the following section to enable GPU support (NVIDIA)
-    # deploy:
-    #   resources:
-    #     reservations:
-    #       devices:
-    #         - driver: nvidia
-    #           count: 1
-    #           capabilities: [gpu]
-
-  ollama-init:
-    image: curlimages/curl
-    depends_on:
-      ollama:
-        condition: service_healthy
-    command: >
-      sh -c "echo 'Waiting for Ollama...' && 
-             curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llava\"}' && 
-             echo 'Model pulled successfully!'"
-
 volumes:
   backend_data:
-  ollama_data:
