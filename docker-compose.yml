@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_HOST=https://blue-sunshine-8273.trycloudflare.com   # <-- Local machine Ollama URL
+      - OLLAMA_HOST=http://172.16.16.38:11434   # <-- your local machine IP or tunnel URL
       - DATABASE_URL=sqlite+aiosqlite:///./data/handwriting.db
     volumes:
       - backend_data:/app/data
@@ -19,7 +19,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - BACKEND_URL=http://15.236.201.26:8000     # <-- EC2 Public IP
+      - BACKEND_URL=http://15.236.201.26:8000   # <-- your EC2 public IP
     depends_on:
       - backend
 
