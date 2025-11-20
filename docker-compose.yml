@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_HOST=http://15.236.201.26:11434     # <-- Use EC2 PUBLIC IP
+      - OLLAMA_HOST=http://ollama:11434     # Use internal Docker DNS
       - DATABASE_URL=sqlite+aiosqlite:///./data/handwriting.db
     volumes:
       - backend_data:/app/data
@@ -20,10 +20,11 @@ services:
 
   frontend:
     build: ./frontend
+    container_name: frontend
     ports:
       - "5000:5000"
     environment:
-      - BACKEND_URL=http://15.236.201.26:8000      # <-- Public IP for frontend access
+      - BACKEND_URL=http://15.236.201.26:8000     # <-- Public EC2 IP
     depends_on:
       - backend
 
@@ -33,25 +34,30 @@ services:
     ports:
       - "11434:11434"
     environment:
-      - OLLAMA_HOST=0.0.0.0                        # <-- Allow remote access
-      - OLLAMA_ORIGINS=*                           # <-- Allow CORS
+      - OLLAMA_HOST=0.0.0.0                        # Enable remote API
+      - OLLAMA_ORIGINS=*                           # Allow CORS
     volumes:
       - ollama_data:/root/.ollama
     healthcheck:
-      test: ["CMD", "ollama", "list"]
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   ollama-init:
     image: curlimages/curl
+    container_name: ollama-init
     depends_on:
       ollama:
         condition: service_healthy
     command: >
-      sh -c "echo 'Waiting for Ollama...' && 
-             curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llava\"}' && 
-             echo 'Model pulled successfully!'"
+      sh -c "
+        echo 'Waiting for Ollama...' &&
+        sleep 5 &&
+        echo 'Pulling LLaVA model...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\": \"llava\"}' &&
+        echo 'Model pulled successfully!'
+      "
 
 volumes:
   backend_data:
