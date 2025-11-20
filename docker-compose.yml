@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - OLLAMA_HOST=http://172.16.16.38:11434  # <-- Local machine IP where Ollama runs
+      - OLLAMA_HOST=https://extends-recovery-minority-supreme.trycloudflare.com  # <-- Local machine IP where Ollama runs
       - DATABASE_URL=sqlite+aiosqlite:///./data/handwriting.db
       - OLLAMA_MODEL=llava:latest
       - OLLAMA_TIMEOUT_SECONDS=120
