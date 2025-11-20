@@ -174,6 +174,16 @@ async def upload_file(file: UploadFile = File(...), db: AsyncSession = Depends(g
         print(f"[ERROR] Upload error: {error_type}: {error_details}")
         print(f"[ERROR] Traceback: {traceback.format_exc()}")
 
+        # Write error to log file for debugging
+        try:
+            with open("error_log.txt", "a") as log_file:
+                import datetime
+                log_file.write(f"\n[{datetime.datetime.now()}] Error processing file {filename if 'filename' in locals() else 'unknown'}:\n")
+                log_file.write(f"{error_type}: {error_details}\n")
+                log_file.write(traceback.format_exc())
+        except:
+            pass
+
         if file_path and file_path.exists():
             try:
                 os.remove(file_path)

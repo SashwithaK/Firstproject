@@ -233,10 +233,24 @@ The JSON should have descriptive keys based on the actual content structure.""",
         except Exception as e:
             error_msg = str(e)
             print(f"[ERROR] Ollama extraction failed: {error_msg}")
+            import traceback
+            print(traceback.format_exc())
+            
+            # Only try fallback if it's not a critical connection error that implies we can't retry
+            if "Connection refused" in error_msg or "Max retries exceeded" in error_msg:
+                 # If we can't connect to Ollama at all, we should probably just fail or fallback immediately
+                 pass
 
             # Fall back to HuggingFace
             print("[INFO] Falling back to HuggingFace vision model")
-            return self.extract_handwriting_huggingface(image_path, filename)
+            fallback_result = self.extract_handwriting_huggingface(image_path, filename)
+            
+            if not fallback_result["success"]:
+                # Combine errors to help user debug
+                fallback_result["error"] = f"Ollama failed ({error_msg}) AND HuggingFace failed ({fallback_result.get('error')})"
+                fallback_result["message"] = "Both Ollama and fallback models failed to extract text."
+                
+            return fallback_result
 
     def extract_handwriting_huggingface(self, image_path: str, filename: str) -> Dict[str, Any]:
         """Extract handwriting using HuggingFace Qwen2.5-VL model via OpenAI API"""

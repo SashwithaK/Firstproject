@@ -8,6 +8,7 @@ const UploadSection = ({ onUploadSuccess, onError }) => {
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [extractedData, setExtractedData] = useState(null);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleDrag = (e) => {
@@ -75,7 +76,10 @@ const UploadSection = ({ onUploadSuccess, onError }) => {
     formData.append('file', selectedFile);
 
     try {
-      const response = await axios.post('http://localhost:8000/upload', formData, {
+      // Use relative path /api/upload so requests go through the Vite proxy
+      // This handles both local development (localhost:5000 -> localhost:8000)
+      // and Docker (frontend:5000 -> backend:8000)
+      const response = await axios.post('/api/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -102,7 +106,15 @@ const UploadSection = ({ onUploadSuccess, onError }) => {
   };
 
   return (
-    <div className="grid lg:grid-cols-2 gap-10">
+    <div className="relative grid lg:grid-cols-2 gap-10">
+      {showCopyNotification && (
+        <div className="fixed top-8 right-8 z-50 bg-green-600 text-white px-8 py-5 rounded-2xl shadow-2xl flex items-center gap-4 animate-slide-in">
+          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+          </svg>
+          <span className="text-xl font-bold">✅ JSON Copied to Clipboard!</span>
+        </div>
+      )}
       {/* Upload Area */}
       <div className="space-y-6">
         <div className="bg-white rounded-3xl shadow-2xl p-8 border-4 border-blue-100">
@@ -280,6 +292,8 @@ const UploadSection = ({ onUploadSuccess, onError }) => {
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(JSON.stringify(extractedData.extracted_data, null, 2));
+                    setShowCopyNotification(true);
+                    setTimeout(() => setShowCopyNotification(false), 3000);
                   }}
                   className="flex-1 flex items-center justify-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-black py-5 px-8 rounded-2xl text-xl shadow-2xl transition-all duration-300 transform hover:scale-105"
                 >
